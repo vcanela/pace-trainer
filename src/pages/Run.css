@@ -1,0 +1,119 @@
+.run {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.tap-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  border: none;
+  border-bottom: 4px solid transparent;
+  width: 100%;
+  padding: 2rem 1.5rem;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s ease, border-color 0.2s ease;
+}
+
+.tap-zone:active {
+  background: #12141c;
+}
+
+.tap-zone.is-flagged {
+  border-bottom-color: var(--amber);
+}
+
+.run-progress {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.run-number {
+  font-size: 40vw;
+  font-weight: 800;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-total {
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.run-hint {
+  margin-top: 1.5rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  max-width: 20rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.flag-chip {
+  margin-top: 0.75rem;
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.run-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+
+.foot-btn {
+  flex: 1;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  padding: 0.85rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.foot-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flag-btn.active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.end-btn {
+  background: var(--accent);
+  color: #05140a;
+  border-color: var(--accent);
+}
+
+.cancel-btn {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+  background: transparent;
+  border-color: transparent;
+}
+
+.cancel-btn:hover {
+  color: var(--red);
+}
