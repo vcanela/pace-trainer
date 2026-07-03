@@ -83,7 +83,7 @@
 .pace-value {
   font-size: 2rem;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent-soft);
   font-variant-numeric: tabular-nums;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .summary-total strong {
-  color: var(--accent);
+  color: var(--accent-soft);
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
@@ -224,16 +224,20 @@
 
 /* ---- Custom presets ---- */
 .custom-toggle {
+  display: block;
+  margin-top: 1rem;
   background: transparent;
   border: none;
-  color: var(--text);
+  color: var(--accent-soft);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   padding: 0;
 }
 
 .custom-body {
-  margin-top: 1rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
 }
 
 .note {

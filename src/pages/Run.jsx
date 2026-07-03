@@ -26,7 +26,11 @@ function Run({ config, onFinish, onCancel }) {
     finishRef.current = () => {
       if (finishedRef.current) return
       finishedRef.current = true
-      onFinish({ durations: deriveDurations(lapTimes), flags })
+      onFinish({
+        durations: deriveDurations(lapTimes),
+        flags,
+        elapsedMs: Date.now() - startedAtRef.current,
+      })
     }
   }, [lapTimes, flags, deriveDurations, onFinish])
 

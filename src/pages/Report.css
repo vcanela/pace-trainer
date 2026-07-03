@@ -69,7 +69,7 @@
 }
 
 .tone-under .stat-value {
-  color: var(--band-under);
+  color: var(--accent-soft);
 }
 
 .tone-over .stat-value {
@@ -153,12 +153,7 @@
 
 .target-line {
   left: calc(2.5rem + (100% - 2.5rem - 3.25rem) * var(--target-frac));
-  border-left: 2px dashed rgba(255, 255, 255, 0.65);
-}
-
-.avg-line {
-  left: calc(2.5rem + (100% - 2.5rem - 3.25rem) * var(--avg-frac));
-  border-left: 2px solid var(--band-over);
+  border-left: 2px dashed rgba(255, 255, 255, 0.6);
 }
 
 .bar-row {
@@ -212,39 +207,55 @@
   color: var(--text);
 }
 
-.line-key {
-  display: flex;
-  gap: 1.25rem;
-  margin-top: 0.85rem;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-}
-
-.line-key span {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.ln {
-  display: inline-block;
-  width: 1.1rem;
-  height: 0;
-}
-
-.ln.target {
-  border-top: 2px dashed rgba(255, 255, 255, 0.65);
-}
-
-.ln.avg {
-  border-top: 2px solid var(--band-over);
-}
-
 .chart-note {
   margin: 0.85rem 0 0;
   font-size: 0.78rem;
   color: var(--text-dim);
   line-height: 1.5;
+}
+
+/* Overall average-vs-target comparison, separate from the per-question chart. */
+.avg-compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.6rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--band-on);
+}
+
+.avg-compare.band-under {
+  border-left-color: var(--band-under);
+}
+.avg-compare.band-over {
+  border-left-color: var(--band-over);
+}
+
+.avg-compare-label {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.avg-compare-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.band-under .avg-compare-value {
+  color: var(--band-under);
+}
+.band-over .avg-compare-value {
+  color: var(--band-over);
+}
+
+.avg-compare-delta {
+  color: var(--text);
+  font-size: 0.95rem;
 }
 
 .actions {

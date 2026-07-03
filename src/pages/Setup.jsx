@@ -85,60 +85,16 @@ function Setup({ onStart }) {
           <span className="pace-value">{formatSeconds(paceMs)}</span>
           <span className="pace-unit">per question</span>
         </div>
-      </section>
 
-      <section className="card">
-        <h2>2 · How many questions?</h2>
-        <div className="stepper">
-          <button type="button" className="step-btn" onClick={() => changeCount(count - 1)} aria-label="One fewer question">
-            −
-          </button>
-          <input
-            type="number"
-            min="1"
-            max="200"
-            inputMode="numeric"
-            className="count-input"
-            value={count}
-            onChange={(e) => changeCount(Math.floor(Number(e.target.value) || 1))}
-          />
-          <button type="button" className="step-btn" onClick={() => changeCount(count + 1)} aria-label="One more question">
-            +
-          </button>
-        </div>
-        <div className="quick-chips">
-          {[5, 10, 15, 20].map((n) => (
-            <button key={n} type="button" className="chip" onClick={() => changeCount(n)}>
-              {n}
-            </button>
-          ))}
-          <button type="button" className="chip" onClick={() => changeCount(selected.questions)}>
-            Full ({selected.questions})
-          </button>
-        </div>
-      </section>
-
-      <section className="summary-card">
-        <div className="summary-line">
-          <strong>{count}</strong> questions · <strong>{formatSeconds(paceMs)}</strong> each
-        </div>
-        <div className="summary-total">
-          Total practice time <strong>{formatDuration(totalMs)}</strong>
-        </div>
-        <button type="button" className="btn-start" onClick={start}>
-          Start practice
-        </button>
-      </section>
-
-      <section className="card">
         <button type="button" className="custom-toggle" onClick={() => setShowCustom((s) => !s)}>
-          {showCustom ? '▾' : '▸'} Custom presets ({customPresets.length})
+          {showCustom ? '▾' : '+'} Custom pace{customPresets.length > 0 ? ` (${customPresets.length})` : ''}
         </button>
         {showCustom && (
           <div className="custom-body">
             <p className="note">
               Make your own pace from any reference paper — enter its total questions and
-              minutes and it works out the per-question target.
+              minutes and it works out the per-question target. Saved presets appear in the
+              list above.
             </p>
             {customPresets.length > 0 && (
               <ul className="custom-list">
@@ -193,6 +149,49 @@ function Setup({ onStart }) {
             </div>
           </div>
         )}
+      </section>
+
+      <section className="card">
+        <h2>2 · How many questions?</h2>
+        <div className="stepper">
+          <button type="button" className="step-btn" onClick={() => changeCount(count - 1)} aria-label="One fewer question">
+            −
+          </button>
+          <input
+            type="number"
+            min="1"
+            max="200"
+            inputMode="numeric"
+            className="count-input"
+            value={count}
+            onChange={(e) => changeCount(Math.floor(Number(e.target.value) || 1))}
+          />
+          <button type="button" className="step-btn" onClick={() => changeCount(count + 1)} aria-label="One more question">
+            +
+          </button>
+        </div>
+        <div className="quick-chips">
+          {[5, 10, 15, 20].map((n) => (
+            <button key={n} type="button" className="chip" onClick={() => changeCount(n)}>
+              {n}
+            </button>
+          ))}
+          <button type="button" className="chip" onClick={() => changeCount(selected.questions)}>
+            Full ({selected.questions})
+          </button>
+        </div>
+      </section>
+
+      <section className="summary-card">
+        <div className="summary-line">
+          <strong>{count}</strong> questions · <strong>{formatSeconds(paceMs)}</strong> each
+        </div>
+        <div className="summary-total">
+          Total practice time <strong>{formatDuration(totalMs)}</strong>
+        </div>
+        <button type="button" className="btn-start" onClick={start}>
+          Start practice
+        </button>
       </section>
 
       <p className="disclaimer">

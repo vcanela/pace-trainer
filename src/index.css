@@ -8,14 +8,15 @@
   --text: #e7eaf0;
   --text-dim: #9aa1b1;
 
-  /* Primary actions: a calm blue (no green/red as UI signal colours). */
-  --accent: #4c8dff;
-  --accent-hover: #3b78ea;
-  --accent-ring: rgba(76, 141, 255, 0.3);
+  /* Primary actions: a light violet (no green/red as UI signal colours). */
+  --accent: #8b74ee; /* fills: buttons */
+  --accent-hover: #7a61e4;
+  --accent-ring: rgba(139, 116, 238, 0.35);
+  --accent-soft: #b3a2ff; /* lighter violet for text/accents on dark */
 
-  /* Report pace bands — a colourblind-safe blue↔orange scale with a neutral
+  /* Report pace bands — a colourblind-safe violet↔orange scale with a neutral
      midpoint, so faster/slower reads by hue AND position, not red/green. */
-  --band-under: #4c8dff; /* faster than target */
+  --band-under: #a78bfa; /* faster than target */
   --band-on: #97a4b6; /* on pace (neutral slate) */
   --band-over: #e8913a; /* slower than target */
 

@@ -10,14 +10,19 @@ export const FAST_RATIO = 0.5 // took <50% of target — very quick
 //   targetMs:      target time per question (the chosen pace)
 //   durations:     per-question times in ms (length = questions answered)
 //   flags:         0-based question indexes the student flagged
-export function buildReport({ questionCount, targetMs, durations, flags = [] }) {
+export function buildReport({ questionCount, targetMs, durations, flags = [], elapsedMs }) {
   const flagSet = new Set(flags)
   const totalAllottedMs = questionCount * targetMs
 
   const answered = durations.length
   const unanswered = Math.max(0, questionCount - answered)
-  const totalSpentMs = durations.reduce((a, b) => a + b, 0)
-  const avgMs = answered > 0 ? totalSpentMs / answered : 0
+  // Time spent on completed questions (used for average and pace delta).
+  const completedMs = durations.reduce((a, b) => a + b, 0)
+  // Actual wall-clock time used. When the timer runs out with a question still
+  // in progress, that time still counts — so "time used" reflects the whole
+  // sitting, not just the completed laps. Falls back to completedMs if not given.
+  const timeUsedMs = Math.min(elapsedMs ?? completedMs, totalAllottedMs)
+  const avgMs = answered > 0 ? completedMs / answered : 0
 
   const questions = durations.map((ms, i) => {
     const ratio = targetMs > 0 ? ms / targetMs : 1
@@ -38,8 +43,11 @@ export function buildReport({ questionCount, targetMs, durations, flags = [] }) 
   const slow = questions.filter((q) => q.isSlow)
   const overPace = questions.filter((q) => q.band === 'over')
 
-  // How the answered questions compare to their fair share of time.
-  const paceDeltaMs = totalSpentMs - answered * targetMs
+  // How the completed questions compare to their fair share of time.
+  const paceDeltaMs = completedMs - answered * targetMs
+  // Average vs target, for the overall comparison line.
+  const avgDeltaMs = answered > 0 ? avgMs - targetMs : 0
+  const avgBand = avgDeltaMs > targetMs * ON_PACE_BAND ? 'over' : avgDeltaMs < -targetMs * ON_PACE_BAND ? 'under' : 'on'
 
   return {
     questionCount,
@@ -47,8 +55,11 @@ export function buildReport({ questionCount, targetMs, durations, flags = [] }) 
     totalAllottedMs,
     answered,
     unanswered,
-    totalSpentMs,
+    completedMs,
+    timeUsedMs,
     avgMs,
+    avgDeltaMs,
+    avgBand,
     paceDeltaMs,
     questions,
     slow,

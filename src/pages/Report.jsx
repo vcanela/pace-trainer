@@ -11,6 +11,7 @@ function Report({ config, result, onNew, onRepeat }) {
         targetMs: config.targetMs,
         durations: result.durations,
         flags: result.flags,
+        elapsedMs: result.elapsedMs,
       }),
     [config, result],
   )
@@ -36,9 +37,8 @@ function Report({ config, result, onNew, onRepeat }) {
     setHistory(saveSession(session))
   }, [config, report])
 
-  const maxMs = Math.max(report.targetMs, report.avgMs, ...report.questions.map((q) => q.ms), 1)
+  const maxMs = Math.max(report.targetMs, ...report.questions.map((q) => q.ms), 1)
   const targetFrac = report.targetMs / maxMs
-  const avgFrac = report.avgMs / maxMs
 
   return (
     <div className="report">
@@ -63,7 +63,7 @@ function Report({ config, result, onNew, onRepeat }) {
         />
         <Stat
           label="Time used"
-          value={formatDuration(report.totalSpentMs)}
+          value={formatDuration(report.timeUsedMs)}
           sub={`of ${formatDuration(report.totalAllottedMs)}`}
           tone="neutral"
         />
@@ -79,12 +79,8 @@ function Report({ config, result, onNew, onRepeat }) {
           </div>
         </div>
 
-        <div
-          className="bars"
-          style={{ '--target-frac': targetFrac, '--avg-frac': avgFrac }}
-        >
+        <div className="bars" style={{ '--target-frac': targetFrac }}>
           <div className="ref-line target-line" title={`Target ${formatSeconds(report.targetMs)}`} />
-          <div className="ref-line avg-line" title={`Your average ${formatSeconds(report.avgMs)}`} />
           {report.questions.map((q) => (
             <div className="bar-row" key={q.number}>
               <span className="bar-num">
@@ -99,15 +95,26 @@ function Report({ config, result, onNew, onRepeat }) {
           ))}
         </div>
 
-        <div className="line-key">
-          <span><i className="ln target" /> Target {formatSeconds(report.targetMs)}</span>
-          <span><i className="ln avg" /> Your average {formatSeconds(report.avgMs)}</span>
-        </div>
         <p className="chart-note">
-          Bars are coloured by how each question compares to the target pace. Flags (⚑) are ones
-          you marked to revisit. A quick question may simply be easy, so the raw times are shown too.
+          The dashed line is your target pace. Bars are coloured by how each question compares to
+          it. Flags (⚑) are ones you marked to revisit — a quick question may just be easy, so the
+          raw times are shown too.
         </p>
       </section>
+
+      {report.answered > 0 && (
+        <div className={`avg-compare band-${report.avgBand}`}>
+          <span className="avg-compare-label">On average you spent</span>
+          <span className="avg-compare-value">{formatSeconds(report.avgMs)}</span>
+          <span className="avg-compare-delta">
+            {report.avgBand === 'on'
+              ? `right on the ${formatSeconds(report.targetMs)} target`
+              : `${formatDuration(Math.abs(report.avgDeltaMs))} ${
+                  report.avgBand === 'over' ? 'slower than' : 'faster than'
+                } the ${formatSeconds(report.targetMs)} target`}
+          </span>
+        </div>
+      )}
 
       <div className="actions">
         <button type="button" className="btn-repeat" onClick={onRepeat}>
