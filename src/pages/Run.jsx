@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './Run.css'
 
 function Run({ config, onFinish, onCancel }) {
-  const { questionCount, totalMinutes } = config
-  const totalMs = totalMinutes * 60 * 1000
+  const { questionCount, targetMs } = config
+  const totalMs = questionCount * targetMs
 
   const startedAtRef = useRef(Date.now())
   const [lapTimes, setLapTimes] = useState([]) // absolute timestamps, one per finished question

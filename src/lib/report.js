@@ -1,21 +1,18 @@
-// Heuristic thresholds for flagging a question's pace. These are deliberately
-// generous, and the UI always shows the raw time alongside the flag — a fast
-// question may simply have been easy, not careless.
-export const SLOW_RATIO = 1.5 // took >150% of the target time
-export const FAST_RATIO = 0.5 // took <50% of the target time
-
-export function targetMsPerQuestion(questionCount, totalMinutes) {
-  if (!questionCount || questionCount <= 0) return 0
-  return (totalMinutes * 60 * 1000) / questionCount
-}
+// Colour bands are relative to the target pace. A generous dead-zone around the
+// target counts as "on pace"; beyond it a question reads as faster or slower.
+export const ON_PACE_BAND = 0.15 // within ±15% of target = on pace
+// Flags (for the verdict / revisit list) are more conservative than the colour.
+export const SLOW_RATIO = 1.5 // took >150% of target — worth flagging to revisit
+export const FAST_RATIO = 0.5 // took <50% of target — very quick
 
 // Build the full report from a finished run.
-//   durations: array of per-question times in ms (length = questions answered)
-//   flags:     array of 0-based question indexes the student flagged
-export function buildReport({ questionCount, totalMinutes, durations, flags = [] }) {
+//   questionCount: how many questions the student set out to do
+//   targetMs:      target time per question (the chosen pace)
+//   durations:     per-question times in ms (length = questions answered)
+//   flags:         0-based question indexes the student flagged
+export function buildReport({ questionCount, targetMs, durations, flags = [] }) {
   const flagSet = new Set(flags)
-  const targetMs = targetMsPerQuestion(questionCount, totalMinutes)
-  const totalAllottedMs = totalMinutes * 60 * 1000
+  const totalAllottedMs = questionCount * targetMs
 
   const answered = durations.length
   const unanswered = Math.max(0, questionCount - answered)
@@ -24,27 +21,28 @@ export function buildReport({ questionCount, totalMinutes, durations, flags = []
 
   const questions = durations.map((ms, i) => {
     const ratio = targetMs > 0 ? ms / targetMs : 1
-    let category = 'ok'
-    if (ratio > SLOW_RATIO) category = 'slow'
-    else if (ratio < FAST_RATIO) category = 'fast'
+    let band = 'on'
+    if (ratio > 1 + ON_PACE_BAND) band = 'over'
+    else if (ratio < 1 - ON_PACE_BAND) band = 'under'
     return {
       number: i + 1,
       ms,
       ratio,
-      category,
+      band,
+      isSlow: ratio > SLOW_RATIO,
+      isFast: ratio < FAST_RATIO,
       flagged: flagSet.has(i),
     }
   })
 
-  const slow = questions.filter((q) => q.category === 'slow')
-  const fast = questions.filter((q) => q.category === 'fast')
+  const slow = questions.filter((q) => q.isSlow)
+  const overPace = questions.filter((q) => q.band === 'over')
 
-  // Pace delta: how the answered questions compare to their fair share of time.
+  // How the answered questions compare to their fair share of time.
   const paceDeltaMs = totalSpentMs - answered * targetMs
 
   return {
     questionCount,
-    totalMinutes,
     targetMs,
     totalAllottedMs,
     answered,
@@ -54,7 +52,7 @@ export function buildReport({ questionCount, totalMinutes, durations, flags = []
     paceDeltaMs,
     questions,
     slow,
-    fast,
+    overPace,
     verdict: buildVerdict({ answered, unanswered, avgMs, targetMs, slow, paceDeltaMs }),
   }
 }
@@ -64,10 +62,9 @@ function buildVerdict({ answered, unanswered, avgMs, targetMs, slow, paceDeltaMs
 
   const parts = []
   const overUnder = paceDeltaMs <= 0 ? 'under' : 'over'
-  const absDelta = Math.abs(paceDeltaMs)
   parts.push(
     `Averaged ${formatSeconds(avgMs)} per question against a ${formatSeconds(targetMs)} target` +
-      ` (${formatDuration(absDelta)} ${overUnder} pace overall).`,
+      ` (${formatDuration(Math.abs(paceDeltaMs))} ${overUnder} pace overall).`,
   )
 
   if (unanswered > 0) {

@@ -1,12 +1,12 @@
 .setup {
   max-width: 32rem;
   margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
+  padding: 2rem 1.25rem 3rem;
 }
 
 .setup-header {
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .setup-header h1 {
@@ -27,12 +27,12 @@
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 0.9rem;
-  padding: 1.5rem;
-  margin-bottom: 1.25rem;
+  padding: 1.35rem;
+  margin-bottom: 1rem;
 }
 
 .card h2 {
-  margin: 0 0 1.1rem;
+  margin: 0 0 1rem;
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -40,15 +40,7 @@
   color: var(--text-dim);
 }
 
-.inputs {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.75rem;
-}
-
-.inputs label {
-  flex: 1 1 0;
-  min-width: 0;
+.select-label {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -57,88 +49,201 @@
   font-weight: 500;
 }
 
-.inputs input {
-  width: 100%;
-  min-width: 0;
+.select-label select {
   background: #0c0e14;
   border: 1px solid var(--border-strong);
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
   color: var(--text);
-  padding: 0.7rem 0.4rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
+  padding: 0.85rem 0.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%239aa1b1' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
 }
 
-.inputs input:focus {
+.select-label select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
-.times {
-  color: var(--text-dim);
-  font-size: 1.4rem;
-  padding-bottom: 0.7rem;
-}
-
-.target {
+.pace-readout {
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 0.5rem;
-  margin: 1.5rem 0;
-  padding: 1rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
   background: var(--panel-2);
   border-radius: 0.6rem;
 }
 
-.target-label,
-.target-unit {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-}
-
-.target-value {
+.pace-value {
   font-size: 2rem;
   font-weight: 800;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
+.pace-unit {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+/* ---- Big stepper for question count ---- */
+.stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.step-btn {
+  flex: 0 0 auto;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, transform 0.06s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.step-btn:hover {
+  background: #262c3a;
+}
+
+.step-btn:active {
+  transform: scale(0.95);
+}
+
+.count-input {
+  flex: 1;
+  min-width: 0;
+  background: #0c0e14;
+  border: 1px solid var(--border-strong);
+  border-radius: 1rem;
+  color: var(--text);
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+.count-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chip {
+  flex: 1;
+  min-width: 3rem;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 0.6rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ---- Summary + start ---- */
+.summary-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.9rem;
+  padding: 1.35rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.summary-line {
+  color: var(--text-dim);
+  font-size: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.summary-line strong,
+.summary-total strong {
+  color: var(--text);
+}
+
+.summary-total {
+  font-size: 1.15rem;
+  margin-bottom: 1.15rem;
+}
+
+.summary-total strong {
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .btn-start {
   width: 100%;
   background: var(--accent);
-  color: #05140a;
+  color: white;
   border: none;
-  border-radius: 0.6rem;
-  padding: 1rem;
-  font-size: 1.15rem;
+  border-radius: 0.7rem;
+  padding: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   transition: background 0.14s ease, transform 0.08s ease;
 }
 
-.btn-start:hover:not(:disabled) {
+.btn-start:hover {
   background: var(--accent-hover);
-  color: white;
 }
 
-.btn-start:active:not(:disabled) {
+.btn-start:active {
   transform: translateY(1px);
 }
 
-.btn-start:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* ---- Custom presets ---- */
+.custom-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0;
 }
 
-.muted {
+.custom-body {
+  margin-top: 1rem;
+}
+
+.note {
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
   margin: 0 0 1rem;
 }
 
-.preset-list {
+.custom-list {
   list-style: none;
   margin: 0 0 1rem;
   padding: 0;
@@ -147,62 +252,38 @@
   gap: 0.5rem;
 }
 
-.preset-list li {
+.custom-list li {
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
-}
-
-.preset-apply {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  text-align: left;
   background: #0c0e14;
   border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
-  padding: 0.6rem 0.8rem;
-  color: var(--text);
-  transition: border-color 0.12s ease;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
 }
 
-.preset-apply:hover {
-  border-color: var(--accent);
-}
-
-.preset-name {
-  font-weight: 600;
-}
-
-.preset-detail {
-  font-size: 0.8rem;
-  color: var(--text-dim);
-}
-
-.preset-delete {
+.del-btn {
   background: transparent;
-  border: 1px solid var(--border-strong);
-  border-radius: 0.5rem;
+  border: none;
   color: var(--text-dim);
   font-size: 1.3rem;
   line-height: 1;
-  width: 2.75rem;
-  transition: color 0.12s ease, border-color 0.12s ease;
+  padding: 0 0.3rem;
 }
 
-.preset-delete:hover {
-  color: var(--red);
-  border-color: var(--red);
+.del-btn:hover {
+  color: var(--warm);
 }
 
-.save-preset {
+.custom-form {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.save-preset input {
-  flex: 1;
+.custom-form > input {
   background: #0c0e14;
   border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
@@ -210,20 +291,48 @@
   padding: 0.6rem 0.7rem;
 }
 
-.save-preset input:focus {
+.custom-nums {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.custom-nums label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.custom-nums input {
+  width: 100%;
+  min-width: 0;
+  background: #0c0e14;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  color: var(--text);
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.custom-form input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .btn-save {
-  background: var(--blue);
+  background: var(--accent);
   color: white;
   border: none;
   border-radius: 0.5rem;
-  padding: 0 1.25rem;
+  padding: 0.6rem 1.1rem;
   font-weight: 700;
-  transition: background 0.14s ease;
+  white-space: nowrap;
 }
 
 .btn-save:disabled {
@@ -231,8 +340,10 @@
   cursor: not-allowed;
 }
 
-.history-note {
-  text-align: center;
+.disclaimer {
   color: var(--text-dim);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+  margin: 0.5rem 0 0;
 }

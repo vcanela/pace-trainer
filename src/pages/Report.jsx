@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { buildReport, formatSeconds, formatDuration, SLOW_RATIO, FAST_RATIO } from '../lib/report'
+import { buildReport, formatSeconds, formatDuration } from '../lib/report'
 import { saveSession, loadHistory, deleteSession, clearHistory } from '../lib/storage'
 import './Report.css'
 
 function Report({ config, result, onNew, onRepeat }) {
   const report = useMemo(
-    () => buildReport({ ...config, durations: result.durations, flags: result.flags }),
+    () =>
+      buildReport({
+        questionCount: config.questionCount,
+        targetMs: config.targetMs,
+        durations: result.durations,
+        flags: result.flags,
+      }),
     [config, result],
   )
   const [history, setHistory] = useState([])
@@ -19,45 +25,66 @@ function Report({ config, result, onNew, onRepeat }) {
     const session = {
       id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
       date: new Date().toISOString(),
-      config,
       summary: {
+        label: config.label,
         answered: report.answered,
         questionCount: report.questionCount,
         avgMs: report.avgMs,
         targetMs: report.targetMs,
-        totalMinutes: report.totalMinutes,
       },
     }
     setHistory(saveSession(session))
   }, [config, report])
 
-  const maxMs = Math.max(report.targetMs, ...report.questions.map((q) => q.ms), 1)
-  const targetPct = (report.targetMs / maxMs) * 100
+  const maxMs = Math.max(report.targetMs, report.avgMs, ...report.questions.map((q) => q.ms), 1)
+  const targetFrac = report.targetMs / maxMs
+  const avgFrac = report.avgMs / maxMs
 
   return (
     <div className="report">
       <header className="report-header">
         <h1>Your pacing</h1>
+        {config.label && <p className="report-label">{config.label}</p>}
         <p className="verdict">{report.verdict}</p>
       </header>
 
       <section className="stats">
-        <Stat label="Avg / question" value={formatSeconds(report.avgMs)} sub={`target ${formatSeconds(report.targetMs)}`} tone={report.avgMs > report.targetMs ? 'over' : 'under'} />
-        <Stat label="Completed" value={`${report.answered} / ${report.questionCount}`} sub={report.unanswered > 0 ? `${report.unanswered} not reached` : 'all done'} tone={report.unanswered > 0 ? 'over' : 'under'} />
-        <Stat label="Time used" value={formatDuration(report.totalSpentMs)} sub={`of ${formatDuration(report.totalAllottedMs)}`} tone="neutral" />
+        <Stat
+          label="Avg / question"
+          value={formatSeconds(report.avgMs)}
+          sub={`target ${formatSeconds(report.targetMs)}`}
+          tone={report.avgMs > report.targetMs ? 'over' : 'under'}
+        />
+        <Stat
+          label="Completed"
+          value={`${report.answered} / ${report.questionCount}`}
+          sub={report.unanswered > 0 ? `${report.unanswered} not reached` : 'all done'}
+          tone={report.unanswered > 0 ? 'over' : 'under'}
+        />
+        <Stat
+          label="Time used"
+          value={formatDuration(report.totalSpentMs)}
+          sub={`of ${formatDuration(report.totalAllottedMs)}`}
+          tone="neutral"
+        />
       </section>
 
       <section className="card">
         <div className="chart-head">
           <h2>Time per question</h2>
           <div className="legend">
-            <span className="legend-item"><i className="dot slow" /> too long</span>
-            <span className="legend-item"><i className="dot fast" /> very quick</span>
-            <span className="legend-item"><i className="dot ok" /> on pace</span>
+            <span className="legend-item"><i className="dot under" /> faster</span>
+            <span className="legend-item"><i className="dot on" /> on pace</span>
+            <span className="legend-item"><i className="dot over" /> slower</span>
           </div>
         </div>
 
-        <div className="bars" style={{ '--target-pct': `${targetPct}%` }}>
+        <div
+          className="bars"
+          style={{ '--target-frac': targetFrac, '--avg-frac': avgFrac }}
+        >
+          <div className="ref-line target-line" title={`Target ${formatSeconds(report.targetMs)}`} />
+          <div className="ref-line avg-line" title={`Your average ${formatSeconds(report.avgMs)}`} />
           {report.questions.map((q) => (
             <div className="bar-row" key={q.number}>
               <span className="bar-num">
@@ -65,16 +92,20 @@ function Report({ config, result, onNew, onRepeat }) {
                 Q{q.number}
               </span>
               <div className="bar-track">
-                <div className={`bar-fill ${q.category}`} style={{ width: `${(q.ms / maxMs) * 100}%` }} />
+                <div className={`bar-fill ${q.band}`} style={{ width: `${(q.ms / maxMs) * 100}%` }} />
               </div>
               <span className="bar-time">{formatSeconds(q.ms)}</span>
             </div>
           ))}
         </div>
+
+        <div className="line-key">
+          <span><i className="ln target" /> Target {formatSeconds(report.targetMs)}</span>
+          <span><i className="ln avg" /> Your average {formatSeconds(report.avgMs)}</span>
+        </div>
         <p className="chart-note">
-          The dashed line is your target ({formatSeconds(report.targetMs)}/Q). Flags mark questions
-          longer than {Math.round(SLOW_RATIO * 100)}% or shorter than {Math.round(FAST_RATIO * 100)}% of
-          target — a quick one may just be easy, so the raw times are shown too.
+          Bars are coloured by how each question compares to the target pace. Flags (⚑) are ones
+          you marked to revisit. A quick question may simply be easy, so the raw times are shown too.
         </p>
       </section>
 
@@ -97,9 +128,13 @@ function Report({ config, result, onNew, onRepeat }) {
               {history.map((s) => (
                 <li key={s.id}>
                   <div className="hist-main">
-                    <span className="hist-date">{new Date(s.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                    <span className="hist-date">
+                      {new Date(s.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                      {s.summary.label ? ` · ${s.summary.label}` : ''}
+                    </span>
                     <span className="hist-detail">
-                      {s.summary.answered}/{s.summary.questionCount} · avg {formatSeconds(s.summary.avgMs)} vs {formatSeconds(s.summary.targetMs)}
+                      {s.summary.answered}/{s.summary.questionCount} · avg {formatSeconds(s.summary.avgMs)} vs{' '}
+                      {formatSeconds(s.summary.targetMs)}
                     </span>
                   </div>
                   <button

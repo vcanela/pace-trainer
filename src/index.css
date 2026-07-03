@@ -7,11 +7,20 @@
   --border-strong: #3a4152;
   --text: #e7eaf0;
   --text-dim: #9aa1b1;
-  --accent: #22c55e;
-  --accent-hover: #16a34a;
-  --blue: #3b82f6;
-  --amber: #f59e0b;
-  --red: #ef4444;
+
+  /* Primary actions: a calm blue (no green/red as UI signal colours). */
+  --accent: #4c8dff;
+  --accent-hover: #3b78ea;
+  --accent-ring: rgba(76, 141, 255, 0.3);
+
+  /* Report pace bands — a colourblind-safe blue↔orange scale with a neutral
+     midpoint, so faster/slower reads by hue AND position, not red/green. */
+  --band-under: #4c8dff; /* faster than target */
+  --band-on: #97a4b6; /* on pace (neutral slate) */
+  --band-over: #e8913a; /* slower than target */
+
+  --amber: #f5a524; /* flag marker on the run screen */
+  --warm: #e8913a; /* soft destructive / warning accent (not a harsh red) */
   font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
 }
 

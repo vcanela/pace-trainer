@@ -7,7 +7,7 @@ import Report from './pages/Report.jsx'
 // State is held here and passed down rather than routed by URL.
 function App() {
   const [phase, setPhase] = useState('setup') // 'setup' | 'run' | 'report'
-  const [config, setConfig] = useState(null) // { questionCount, totalMinutes }
+  const [config, setConfig] = useState(null) // { label, questionCount, targetMs }
   const [result, setResult] = useState(null) // { durations, flags }
 
   const startRun = (cfg) => {

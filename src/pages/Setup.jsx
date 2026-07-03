@@ -1,32 +1,49 @@
-import { useState } from 'react'
-import { loadPresets, savePreset, deletePreset, loadHistory } from '../lib/storage'
-import { targetMsPerQuestion, formatSeconds } from '../lib/report'
+import { useMemo, useState } from 'react'
+import { BUILTIN_PRESETS, presetPaceMs, presetLabel } from '../lib/presets'
+import { loadCustomPresets, saveCustomPreset, deleteCustomPreset, loadHistory } from '../lib/storage'
+import { formatSeconds, formatDuration } from '../lib/report'
 import './Setup.css'
 
+const SUBJECTS = ['Physics', 'Chemistry', 'Biology']
+
 function Setup({ onStart }) {
-  const [questionCount, setQuestionCount] = useState(40)
-  const [totalMinutes, setTotalMinutes] = useState(60)
-  const [presets, setPresets] = useState(loadPresets)
-  const [presetName, setPresetName] = useState('')
+  const [customPresets, setCustomPresets] = useState(loadCustomPresets)
+  const allPresets = useMemo(() => [...BUILTIN_PRESETS, ...customPresets], [customPresets])
+
+  const [selectedId, setSelectedId] = useState('phys-sl')
+  const selected = allPresets.find((p) => p.id === selectedId) || allPresets[0]
+  const paceMs = presetPaceMs(selected)
+
+  const [count, setCount] = useState(selected.questions)
+  const totalMs = count * paceMs
   const historyCount = loadHistory().length
 
-  const valid = questionCount >= 1 && totalMinutes >= 1
-  const targetMs = valid ? targetMsPerQuestion(questionCount, totalMinutes) : 0
+  // Custom preset form
+  const [showCustom, setShowCustom] = useState(false)
+  const [cName, setCName] = useState('')
+  const [cQuestions, setCQuestions] = useState(30)
+  const [cMinutes, setCMinutes] = useState(45)
+  const customValid = cName.trim() && cQuestions >= 1 && cMinutes >= 1
 
-  const applyPreset = (p) => {
-    setQuestionCount(p.questionCount)
-    setTotalMinutes(p.totalMinutes)
-    setPresetName(p.name)
+  const changeCount = (n) => setCount(Math.max(1, Math.min(200, n)))
+
+  const handleSaveCustom = () => {
+    if (!customValid) return
+    const next = saveCustomPreset({ name: cName, questions: cQuestions, minutes: cMinutes })
+    setCustomPresets(next)
+    setSelectedId(`custom-${cName.trim().toLowerCase()}`)
+    setCName('')
+    setShowCustom(false)
   }
 
-  const handleSavePreset = () => {
-    const name = presetName.trim()
-    if (!name || !valid) return
-    setPresets(savePreset({ name, questionCount, totalMinutes }))
+  const handleDeleteCustom = (id) => {
+    const next = deleteCustomPreset(id)
+    setCustomPresets(next)
+    if (selectedId === id) setSelectedId('phys-sl')
   }
 
-  const handleDeletePreset = (name) => {
-    setPresets(deletePreset(name))
+  const start = () => {
+    onStart({ label: presetLabel(selected), questionCount: count, targetMs: paceMs })
   }
 
   return (
@@ -34,93 +51,155 @@ function Setup({ onStart }) {
       <header className="setup-header">
         <h1>Pace Trainer</h1>
         <p className="tagline">
-          Practise your exam pacing. Lap each question as you finish it, then get a
-          report of where your time went.
+          Pick your exam pace, choose how many questions you have, then lap each one as
+          you finish. No clock while you go — just a report at the end.
         </p>
       </header>
 
       <section className="card">
-        <h2>This practice set</h2>
-        <div className="inputs">
-          <label>
-            Questions
-            <input
-              type="number"
-              min="1"
-              inputMode="numeric"
-              value={questionCount}
-              onChange={(e) => setQuestionCount(Math.max(1, Math.floor(Number(e.target.value) || 0)))}
-            />
-          </label>
-          <span className="times">×</span>
-          <label>
-            Total time (min)
-            <input
-              type="number"
-              min="1"
-              inputMode="numeric"
-              value={totalMinutes}
-              onChange={(e) => setTotalMinutes(Math.max(1, Math.floor(Number(e.target.value) || 0)))}
-            />
-          </label>
+        <h2>1 · Pace</h2>
+        <label className="select-label">
+          Exam
+          <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)}>
+            {SUBJECTS.map((subj) => (
+              <optgroup key={subj} label={`IB ${subj} — Paper 1A`}>
+                {BUILTIN_PRESETS.filter((p) => p.subject === subj).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.level} · {p.questions} Q in {p.minutes} min
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+            {customPresets.length > 0 && (
+              <optgroup label="Your presets">
+                {customPresets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} · {p.questions} Q in {p.minutes} min
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </label>
+        <div className="pace-readout">
+          <span className="pace-value">{formatSeconds(paceMs)}</span>
+          <span className="pace-unit">per question</span>
         </div>
+      </section>
 
-        <div className="target">
-          <span className="target-label">Target pace</span>
-          <span className="target-value">{valid ? formatSeconds(targetMs) : '—'}</span>
-          <span className="target-unit">per question</span>
+      <section className="card">
+        <h2>2 · How many questions?</h2>
+        <div className="stepper">
+          <button type="button" className="step-btn" onClick={() => changeCount(count - 1)} aria-label="One fewer question">
+            −
+          </button>
+          <input
+            type="number"
+            min="1"
+            max="200"
+            inputMode="numeric"
+            className="count-input"
+            value={count}
+            onChange={(e) => changeCount(Math.floor(Number(e.target.value) || 1))}
+          />
+          <button type="button" className="step-btn" onClick={() => changeCount(count + 1)} aria-label="One more question">
+            +
+          </button>
         </div>
+        <div className="quick-chips">
+          {[5, 10, 15, 20].map((n) => (
+            <button key={n} type="button" className="chip" onClick={() => changeCount(n)}>
+              {n}
+            </button>
+          ))}
+          <button type="button" className="chip" onClick={() => changeCount(selected.questions)}>
+            Full ({selected.questions})
+          </button>
+        </div>
+      </section>
 
-        <button type="button" className="btn-start" disabled={!valid} onClick={() => onStart({ questionCount, totalMinutes })}>
+      <section className="summary-card">
+        <div className="summary-line">
+          <strong>{count}</strong> questions · <strong>{formatSeconds(paceMs)}</strong> each
+        </div>
+        <div className="summary-total">
+          Total practice time <strong>{formatDuration(totalMs)}</strong>
+        </div>
+        <button type="button" className="btn-start" onClick={start}>
           Start practice
         </button>
       </section>
 
       <section className="card">
-        <h2>Presets</h2>
-        {presets.length === 0 ? (
-          <p className="muted">No presets yet. Save the set above to reuse it later.</p>
-        ) : (
-          <ul className="preset-list">
-            {presets.map((p) => (
-              <li key={p.name}>
-                <button type="button" className="preset-apply" onClick={() => applyPreset(p)}>
-                  <span className="preset-name">{p.name}</span>
-                  <span className="preset-detail">
-                    {p.questionCount} Q · {p.totalMinutes} min ·{' '}
-                    {formatSeconds(targetMsPerQuestion(p.questionCount, p.totalMinutes))}/Q
-                  </span>
+        <button type="button" className="custom-toggle" onClick={() => setShowCustom((s) => !s)}>
+          {showCustom ? '▾' : '▸'} Custom presets ({customPresets.length})
+        </button>
+        {showCustom && (
+          <div className="custom-body">
+            <p className="note">
+              Make your own pace from any reference paper — enter its total questions and
+              minutes and it works out the per-question target.
+            </p>
+            {customPresets.length > 0 && (
+              <ul className="custom-list">
+                {customPresets.map((p) => (
+                  <li key={p.id}>
+                    <span>
+                      <strong>{p.name}</strong> — {p.questions} Q in {p.minutes} min (
+                      {formatSeconds(presetPaceMs(p))}/Q)
+                    </span>
+                    <button
+                      type="button"
+                      className="del-btn"
+                      aria-label={`Delete ${p.name}`}
+                      onClick={() => handleDeleteCustom(p.id)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="custom-form">
+              <input
+                type="text"
+                placeholder="Name, e.g. SEHS SL Paper 1"
+                value={cName}
+                onChange={(e) => setCName(e.target.value)}
+              />
+              <div className="custom-nums">
+                <label>
+                  Questions
+                  <input
+                    type="number"
+                    min="1"
+                    value={cQuestions}
+                    onChange={(e) => setCQuestions(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
+                  />
+                </label>
+                <label>
+                  Minutes
+                  <input
+                    type="number"
+                    min="1"
+                    value={cMinutes}
+                    onChange={(e) => setCMinutes(Math.max(1, Math.floor(Number(e.target.value) || 1)))}
+                  />
+                </label>
+                <button type="button" className="btn-save" disabled={!customValid} onClick={handleSaveCustom}>
+                  Save
                 </button>
-                <button
-                  type="button"
-                  className="preset-delete"
-                  aria-label={`Delete preset ${p.name}`}
-                  onClick={() => handleDeletePreset(p.name)}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
+              </div>
+            </div>
+          </div>
         )}
-        <div className="save-preset">
-          <input
-            type="text"
-            placeholder="Name this set, e.g. Bio HL Paper 1A"
-            value={presetName}
-            onChange={(e) => setPresetName(e.target.value)}
-          />
-          <button type="button" className="btn-save" disabled={!presetName.trim() || !valid} onClick={handleSavePreset}>
-            Save
-          </button>
-        </div>
       </section>
 
-      {historyCount > 0 && (
-        <p className="history-note">
-          You have {historyCount} saved session{historyCount === 1 ? '' : 's'} — view them from the report after your next run.
-        </p>
-      )}
+      <p className="disclaimer">
+        IB doesn't publish a standalone time for Paper 1A (it's sat with Paper 1B), so
+        built-in paces use the recommended split. Adjust with a custom preset if needed.
+        {historyCount > 0 && ` · ${historyCount} saved session${historyCount === 1 ? '' : 's'}.`}
+      </p>
     </div>
   )
 }

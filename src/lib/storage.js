@@ -20,25 +20,30 @@ function write(key, value) {
   }
 }
 
-// ---- Presets: named { name, questionCount, totalMinutes } ----
-export function loadPresets() {
+// ---- Custom presets: { id, name, questions, minutes, custom: true } ----
+export function loadCustomPresets() {
   return read(PRESETS_KEY, [])
 }
 
-export function savePreset(preset) {
-  const presets = loadPresets()
-  // Replace a preset with the same (case-insensitive) name, else append.
-  const idx = presets.findIndex(
-    (p) => p.name.trim().toLowerCase() === preset.name.trim().toLowerCase(),
-  )
+export function saveCustomPreset({ name, questions, minutes }) {
+  const presets = loadCustomPresets()
+  const trimmedName = name.trim()
+  const preset = {
+    id: `custom-${trimmedName.toLowerCase()}`,
+    name: trimmedName,
+    questions,
+    minutes,
+    custom: true,
+  }
+  const idx = presets.findIndex((p) => p.id === preset.id)
   if (idx >= 0) presets[idx] = preset
   else presets.push(preset)
   write(PRESETS_KEY, presets)
   return presets
 }
 
-export function deletePreset(name) {
-  const presets = loadPresets().filter((p) => p.name !== name)
+export function deleteCustomPreset(id) {
+  const presets = loadCustomPresets().filter((p) => p.id !== id)
   write(PRESETS_KEY, presets)
   return presets
 }

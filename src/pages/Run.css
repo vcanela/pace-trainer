@@ -103,7 +103,7 @@
 
 .end-btn {
   background: var(--accent);
-  color: #05140a;
+  color: white;
   border-color: var(--accent);
 }
 
@@ -115,5 +115,5 @@
 }
 
 .cancel-btn:hover {
-  color: var(--red);
+  color: var(--warm);
 }
