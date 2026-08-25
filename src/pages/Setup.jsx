@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { BUILTIN_PRESETS, presetPaceMs, presetLabel } from '../lib/presets'
 import { formatSeconds, formatDuration } from '../lib/report'
+import { loadHistory } from '../lib/storage'
 import './Setup.css'
 
 const SUBJECTS = ['Physics', 'Chemistry', 'Biology']
 
-function Setup({ onStart }) {
+function Setup({ onStart, onProgress }) {
+  const hasHistory = useMemo(() => loadHistory().length > 0, [])
   const [paceMode, setPaceMode] = useState('custom') // 'none' | 'custom' | 'ib'
   const [ibPaceId, setIbPaceId] = useState('phys-sl')
   const [customMin, setCustomMin] = useState(1.5) // minutes per mark
@@ -36,6 +38,11 @@ function Setup({ onStart }) {
           Optionally set a target pace, choose how many marks you're doing, then lap each one as
           you finish. No clock while you go — just a report at the end.
         </p>
+        {hasHistory && onProgress && (
+          <button type="button" className="progress-link" onClick={onProgress}>
+            View progress →
+          </button>
+        )}
       </header>
 
       <section className="card">

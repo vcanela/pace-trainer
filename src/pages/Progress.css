@@ -1,0 +1,183 @@
+.progress {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  font-weight: 600;
+}
+
+.progress-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.empty {
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.type-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.type-select select {
+  background: #0c0e14;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.6rem;
+  color: var(--text);
+  padding: 0.75rem 0.7rem;
+  font-size: 1rem;
+  font-weight: 600;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%239aa1b1' d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+}
+
+.type-select select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.chart-wrap {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.trend-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-empty {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  padding: 1.5rem 1.25rem;
+  margin-bottom: 1.25rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.axis-label {
+  fill: var(--text-dim);
+  font-size: 9px;
+  font-family: inherit;
+}
+
+.target-ref {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.target-ref-label {
+  fill: var(--text-dim);
+  font-size: 9px;
+}
+
+.trend-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-pt {
+  fill: var(--accent-soft);
+}
+
+.trend-pt.best {
+  fill: none;
+  stroke: #ffd76a;
+  stroke-width: 2.5;
+}
+
+.trend-pt.latest {
+  fill: #fff;
+}
+
+.chart-caption {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.run-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.run-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.run-date {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.run-detail {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.run-delta {
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.run-delta.faster {
+  color: var(--band-under);
+}
+
+.run-delta.slower {
+  color: var(--band-over);
+}

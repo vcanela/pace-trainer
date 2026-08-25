@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildReport, formatSeconds, formatDuration } from '../lib/report'
 import { saveSession, loadHistory, deleteSession, clearHistory } from '../lib/storage'
+import { compareToHistory } from '../lib/compare'
 import './Report.css'
 
-function Report({ config, result, onNew, onRepeat }) {
+function Report({ config, result, onNew, onRepeat, onProgress }) {
   const report = useMemo(
     () =>
       buildReport({
@@ -17,9 +18,11 @@ function Report({ config, result, onNew, onRepeat }) {
   )
   const [history, setHistory] = useState([])
   const [showHistory, setShowHistory] = useState(false)
+  const [comparison, setComparison] = useState(null)
   const savedRef = useRef(false)
 
-  // Save this session once, then load the full history.
+  // Save this session once, then load the full history and compare to prior
+  // runs of the same practice type.
   useEffect(() => {
     if (savedRef.current) return
     savedRef.current = true
@@ -33,9 +36,13 @@ function Report({ config, result, onNew, onRepeat }) {
         avgMs: report.avgMs,
         targetMs: report.targetMs,
       },
+      // Full per-mark times, kept for future consistency/overlay views.
+      durations: result.durations,
     }
-    setHistory(saveSession(session))
-  }, [config, report])
+    const saved = saveSession(session)
+    setHistory(saved)
+    if (report.answered > 0) setComparison(compareToHistory(saved, session))
+  }, [config, report, result])
 
   const hasTarget = report.hasTarget
   const maxMs = Math.max(hasTarget ? report.targetMs : 0, ...report.questions.map((q) => q.ms), 1)
@@ -124,6 +131,8 @@ function Report({ config, result, onNew, onRepeat }) {
         </div>
       )}
 
+      {comparison && <Compare comparison={comparison} onProgress={onProgress} />}
+
       <div className="actions">
         <button type="button" className="btn-repeat" onClick={onRepeat}>
           Practise again
@@ -181,6 +190,40 @@ function Stat({ label, value, sub, tone }) {
       <span className="stat-label">{label}</span>
       <span className="stat-value">{value}</span>
       <span className="stat-sub">{sub}</span>
+    </div>
+  )
+}
+
+function Compare({ comparison, onProgress }) {
+  if (comparison.isFirst) {
+    return (
+      <div className="compare-card first">
+        <span className="compare-main">First run of this kind</span>
+        <span className="compare-sub">Do another to start comparing your pace.</span>
+      </div>
+    )
+  }
+
+  const delta = comparison.deltaVsLastMs
+  const sameish = Math.abs(delta) < 1000 // within a second per mark
+  const faster = delta < 0
+  const band = sameish ? 'same' : faster ? 'faster' : 'slower'
+
+  return (
+    <div className={`compare-card band-${band}`}>
+      <div className="compare-text">
+        <span className="compare-main">
+          {sameish
+            ? 'About the same as last time'
+            : `${formatSeconds(Math.abs(delta))} ${faster ? 'faster' : 'slower'} per mark than last time`}
+        </span>
+        {comparison.isBest && <span className="compare-badge">⭐ Personal best</span>}
+      </div>
+      {onProgress && (
+        <button type="button" className="compare-link" onClick={onProgress}>
+          View progress →
+        </button>
+      )}
     </div>
   )
 }
