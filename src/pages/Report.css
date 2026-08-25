@@ -199,6 +199,9 @@
 .bar-fill.over {
   background: var(--band-over);
 }
+.bar-fill.none {
+  background: var(--accent-soft);
+}
 
 .bar-time {
   font-size: 0.8rem;

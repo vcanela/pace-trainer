@@ -2,16 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './Run.css'
 
 function Run({ config, onFinish, onCancel }) {
-  const { questionCount, targetMs } = config
-  const totalMs = questionCount * targetMs
+  const { markCount, targetMs } = config
+  const hasTarget = targetMs != null && targetMs > 0
+  const totalMs = hasTarget ? markCount * targetMs : null
 
   const startedAtRef = useRef(Date.now())
-  const [lapTimes, setLapTimes] = useState([]) // absolute timestamps, one per finished question
+  const [lapTimes, setLapTimes] = useState([]) // absolute timestamps, one per finished mark
   const [flags, setFlags] = useState([]) // 0-based indexes flagged
   const [currentFlagged, setCurrentFlagged] = useState(false)
 
   const answered = lapTimes.length
-  const currentNumber = Math.min(answered + 1, questionCount)
+  const currentNumber = Math.min(answered + 1, markCount)
   const finishedRef = useRef(false)
 
   const deriveDurations = useCallback((times) => {
@@ -37,7 +38,7 @@ function Run({ config, onFinish, onCancel }) {
   const lap = useCallback(() => {
     if (finishedRef.current) return
     setLapTimes((prev) => {
-      if (prev.length >= questionCount) return prev
+      if (prev.length >= markCount) return prev
       const next = [...prev, Date.now()]
       return next
     })
@@ -46,7 +47,7 @@ function Run({ config, onFinish, onCancel }) {
       return prevFlags
     })
     setCurrentFlagged(false)
-  }, [questionCount, currentFlagged, lapTimes.length])
+  }, [markCount, currentFlagged, lapTimes.length])
 
   const undo = useCallback(() => {
     if (finishedRef.current) return
@@ -69,15 +70,17 @@ function Run({ config, onFinish, onCancel }) {
 
   const endNow = useCallback(() => finishRef.current(), [])
 
-  // Finish automatically when all questions are lapped.
+  // Finish automatically when all marks are lapped.
   useEffect(() => {
-    if (lapTimes.length >= questionCount) {
+    if (lapTimes.length >= markCount) {
       finishRef.current()
     }
-  }, [lapTimes.length, questionCount])
+  }, [lapTimes.length, markCount])
 
   // Auto-stop when the total time runs out (blind — no clock shown to the user).
+  // Only applies when a pace/target was set; with no target the run is untimed.
   useEffect(() => {
+    if (totalMs == null) return undefined
     const id = setInterval(() => {
       if (Date.now() - startedAtRef.current >= totalMs) {
         finishRef.current()
@@ -111,10 +114,10 @@ function Run({ config, onFinish, onCancel }) {
         className={`tap-zone ${currentFlagged ? 'is-flagged' : ''}`}
         onClick={lap}
       >
-        <span className="run-progress">Question</span>
+        <span className="run-progress">Mark</span>
         <span className="run-number">{currentNumber}</span>
-        <span className="run-total">of {questionCount}</span>
-        <span className="run-hint">Tap anywhere (or press Space) when you finish this question</span>
+        <span className="run-total">of {markCount}</span>
+        <span className="run-hint">Tap anywhere (or press Space) when you finish each question</span>
         {currentFlagged && <span className="flag-chip">⚑ Flagged</span>}
       </button>
 

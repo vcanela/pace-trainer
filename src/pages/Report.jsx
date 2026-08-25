@@ -7,7 +7,7 @@ function Report({ config, result, onNew, onRepeat }) {
   const report = useMemo(
     () =>
       buildReport({
-        questionCount: config.questionCount,
+        markCount: config.markCount,
         targetMs: config.targetMs,
         durations: result.durations,
         flags: result.flags,
@@ -29,7 +29,7 @@ function Report({ config, result, onNew, onRepeat }) {
       summary: {
         label: config.label,
         answered: report.answered,
-        questionCount: report.questionCount,
+        markCount: report.markCount,
         avgMs: report.avgMs,
         targetMs: report.targetMs,
       },
@@ -37,8 +37,9 @@ function Report({ config, result, onNew, onRepeat }) {
     setHistory(saveSession(session))
   }, [config, report])
 
-  const maxMs = Math.max(report.targetMs, ...report.questions.map((q) => q.ms), 1)
-  const targetFrac = report.targetMs / maxMs
+  const hasTarget = report.hasTarget
+  const maxMs = Math.max(hasTarget ? report.targetMs : 0, ...report.questions.map((q) => q.ms), 1)
+  const targetFrac = hasTarget ? report.targetMs / maxMs : 0
 
   return (
     <div className="report">
@@ -50,41 +51,45 @@ function Report({ config, result, onNew, onRepeat }) {
 
       <section className="stats">
         <Stat
-          label="Avg / question"
+          label="Avg / mark"
           value={formatSeconds(report.avgMs)}
-          sub={`target ${formatSeconds(report.targetMs)}`}
-          tone={report.avgMs > report.targetMs ? 'over' : 'under'}
+          sub={hasTarget ? `target ${formatSeconds(report.targetMs)}` : 'no target set'}
+          tone={hasTarget ? (report.avgMs > report.targetMs ? 'over' : 'under') : 'neutral'}
         />
         <Stat
           label="Completed"
-          value={`${report.answered} / ${report.questionCount}`}
+          value={`${report.answered} / ${report.markCount}`}
           sub={report.unanswered > 0 ? `${report.unanswered} not reached` : 'all done'}
-          tone={report.unanswered > 0 ? 'over' : 'under'}
+          tone={report.unanswered > 0 ? 'over' : 'neutral'}
         />
         <Stat
           label="Time used"
           value={formatDuration(report.timeUsedMs)}
-          sub={`of ${formatDuration(report.totalAllottedMs)}`}
+          sub={hasTarget ? `of ${formatDuration(report.totalAllottedMs)}` : 'no limit'}
           tone="neutral"
         />
       </section>
 
       <section className="card">
         <div className="chart-head">
-          <h2>Time per question</h2>
-          <div className="legend">
-            <span className="legend-item"><i className="dot under" /> faster</span>
-            <span className="legend-item"><i className="dot on" /> on pace</span>
-            <span className="legend-item"><i className="dot over" /> slower</span>
-          </div>
+          <h2>Time per mark</h2>
+          {hasTarget && (
+            <div className="legend">
+              <span className="legend-item"><i className="dot under" /> faster</span>
+              <span className="legend-item"><i className="dot on" /> on pace</span>
+              <span className="legend-item"><i className="dot over" /> slower</span>
+            </div>
+          )}
         </div>
 
         <div className="bars" style={{ '--target-frac': targetFrac }}>
-          <div className="ref-line target-line" title={`Target ${formatSeconds(report.targetMs)}`} />
+          {hasTarget && (
+            <div className="ref-line target-line" title={`Target ${formatSeconds(report.targetMs)}`} />
+          )}
           {report.questions.map((q) => (
             <div className="bar-row" key={q.number}>
               <span className="bar-num">
-                {q.flagged && <span className="bar-flag" title="You flagged this question">⚑</span>}
+                {q.flagged && <span className="bar-flag" title="You flagged this one">⚑</span>}
                 Q{q.number}
               </span>
               <div className="bar-track">
@@ -96,9 +101,10 @@ function Report({ config, result, onNew, onRepeat }) {
         </div>
 
         <p className="chart-note">
-          The dashed line is your target pace. Bars are coloured by how each question compares to
-          it. Flags (⚑) are ones you marked to revisit — a quick question may just be easy, so the
-          raw times are shown too.
+          {hasTarget
+            ? 'The dashed line is your target pace. Bars are coloured by how each mark compares to it. '
+            : 'No target was set, so bars just show your raw time on each mark. '}
+          Flags (⚑) are ones you marked to revisit.
         </p>
       </section>
 
@@ -107,11 +113,13 @@ function Report({ config, result, onNew, onRepeat }) {
           <span className="avg-compare-label">On average you spent</span>
           <span className="avg-compare-value">{formatSeconds(report.avgMs)}</span>
           <span className="avg-compare-delta">
-            {report.avgBand === 'on'
-              ? `right on the ${formatSeconds(report.targetMs)} target`
-              : `${formatDuration(Math.abs(report.avgDeltaMs))} ${
-                  report.avgBand === 'over' ? 'slower than' : 'faster than'
-                } the ${formatSeconds(report.targetMs)} target`}
+            {!hasTarget
+              ? 'per mark'
+              : report.avgBand === 'on'
+                ? `right on the ${formatSeconds(report.targetMs)} target`
+                : `${formatDuration(Math.abs(report.avgDeltaMs))} ${
+                    report.avgBand === 'over' ? 'slower than' : 'faster than'
+                  } the ${formatSeconds(report.targetMs)} target`}
           </span>
         </div>
       )}
@@ -140,8 +148,8 @@ function Report({ config, result, onNew, onRepeat }) {
                       {s.summary.label ? ` · ${s.summary.label}` : ''}
                     </span>
                     <span className="hist-detail">
-                      {s.summary.answered}/{s.summary.questionCount} · avg {formatSeconds(s.summary.avgMs)} vs{' '}
-                      {formatSeconds(s.summary.targetMs)}
+                      {s.summary.answered}/{s.summary.markCount} marks · avg {formatSeconds(s.summary.avgMs)}
+                      {s.summary.targetMs != null ? ` vs ${formatSeconds(s.summary.targetMs)}` : ' · no target'}
                     </span>
                   </div>
                   <button

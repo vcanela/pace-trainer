@@ -6,52 +6,58 @@ export const SLOW_RATIO = 1.5 // took >150% of target — worth flagging to revi
 export const FAST_RATIO = 0.5 // took <50% of target — very quick
 
 // Build the full report from a finished run.
-//   questionCount: how many questions the student set out to do
-//   targetMs:      target time per question (the chosen pace)
-//   durations:     per-question times in ms (length = questions answered)
-//   flags:         0-based question indexes the student flagged
-export function buildReport({ questionCount, targetMs, durations, flags = [], elapsedMs }) {
+//   markCount: how many marks (questions) the student set out to do
+//   targetMs:  target time per mark (the chosen pace), or null for no target
+//   durations: per-mark times in ms (length = marks answered)
+//   flags:     0-based indexes the student flagged
+export function buildReport({ markCount, targetMs, durations, flags = [], elapsedMs }) {
   const flagSet = new Set(flags)
-  const totalAllottedMs = questionCount * targetMs
+  const hasTarget = targetMs != null && targetMs > 0
+  const totalAllottedMs = hasTarget ? markCount * targetMs : null
 
   const answered = durations.length
-  const unanswered = Math.max(0, questionCount - answered)
-  // Time spent on completed questions (used for average and pace delta).
+  const unanswered = Math.max(0, markCount - answered)
+  // Time spent on completed marks (used for average and pace delta).
   const completedMs = durations.reduce((a, b) => a + b, 0)
-  // Actual wall-clock time used. When the timer runs out with a question still
-  // in progress, that time still counts — so "time used" reflects the whole
-  // sitting, not just the completed laps. Falls back to completedMs if not given.
-  const timeUsedMs = Math.min(elapsedMs ?? completedMs, totalAllottedMs)
+  // Actual wall-clock time used. When the timer runs out with a mark still in
+  // progress, that time still counts — so "time used" reflects the whole
+  // sitting, not just the completed laps. Falls back to completedMs if absent.
+  let timeUsedMs = elapsedMs ?? completedMs
+  if (hasTarget) timeUsedMs = Math.min(timeUsedMs, totalAllottedMs)
   const avgMs = answered > 0 ? completedMs / answered : 0
 
   const questions = durations.map((ms, i) => {
-    const ratio = targetMs > 0 ? ms / targetMs : 1
-    let band = 'on'
-    if (ratio > 1 + ON_PACE_BAND) band = 'over'
-    else if (ratio < 1 - ON_PACE_BAND) band = 'under'
+    const ratio = hasTarget ? ms / targetMs : 1
+    let band = 'none'
+    if (hasTarget) {
+      band = 'on'
+      if (ratio > 1 + ON_PACE_BAND) band = 'over'
+      else if (ratio < 1 - ON_PACE_BAND) band = 'under'
+    }
     return {
       number: i + 1,
       ms,
       ratio,
       band,
-      isSlow: ratio > SLOW_RATIO,
-      isFast: ratio < FAST_RATIO,
+      isSlow: hasTarget && ratio > SLOW_RATIO,
       flagged: flagSet.has(i),
     }
   })
 
   const slow = questions.filter((q) => q.isSlow)
-  const overPace = questions.filter((q) => q.band === 'over')
 
-  // How the completed questions compare to their fair share of time.
-  const paceDeltaMs = completedMs - answered * targetMs
-  // Average vs target, for the overall comparison line.
-  const avgDeltaMs = answered > 0 ? avgMs - targetMs : 0
-  const avgBand = avgDeltaMs > targetMs * ON_PACE_BAND ? 'over' : avgDeltaMs < -targetMs * ON_PACE_BAND ? 'under' : 'on'
+  // Comparisons against target only make sense when a target was set.
+  const paceDeltaMs = hasTarget ? completedMs - answered * targetMs : null
+  const avgDeltaMs = hasTarget && answered > 0 ? avgMs - targetMs : null
+  let avgBand = 'none'
+  if (avgDeltaMs != null) {
+    avgBand = avgDeltaMs > targetMs * ON_PACE_BAND ? 'over' : avgDeltaMs < -targetMs * ON_PACE_BAND ? 'under' : 'on'
+  }
 
   return {
-    questionCount,
+    markCount,
     targetMs,
+    hasTarget,
     totalAllottedMs,
     answered,
     unanswered,
@@ -63,31 +69,36 @@ export function buildReport({ questionCount, targetMs, durations, flags = [], el
     paceDeltaMs,
     questions,
     slow,
-    overPace,
-    verdict: buildVerdict({ answered, unanswered, avgMs, targetMs, slow, paceDeltaMs }),
+    verdict: buildVerdict({ hasTarget, answered, unanswered, avgMs, targetMs, slow, paceDeltaMs }),
   }
 }
 
-function buildVerdict({ answered, unanswered, avgMs, targetMs, slow, paceDeltaMs }) {
-  if (answered === 0) return 'No questions were completed.'
+function buildVerdict({ hasTarget, answered, unanswered, avgMs, targetMs, slow, paceDeltaMs }) {
+  if (answered === 0) return 'No marks were completed.'
 
   const parts = []
-  const overUnder = paceDeltaMs <= 0 ? 'under' : 'over'
-  parts.push(
-    `Averaged ${formatSeconds(avgMs)} per question against a ${formatSeconds(targetMs)} target` +
-      ` (${formatDuration(Math.abs(paceDeltaMs))} ${overUnder} pace overall).`,
-  )
 
-  if (unanswered > 0) {
-    parts.push(`Time ran out with ${unanswered} question${unanswered === 1 ? '' : 's'} still to go.`)
-  }
-
-  if (slow.length > 0) {
-    const nums = slow.slice(0, 3).map((q) => `Q${q.number}`).join(', ')
+  if (hasTarget) {
+    const overUnder = paceDeltaMs <= 0 ? 'under' : 'over'
     parts.push(
-      `${slow.length} question${slow.length === 1 ? '' : 's'} ran long${
-        nums ? ` (${nums}${slow.length > 3 ? '…' : ''})` : ''
-      } — candidates to flag and return to.`,
+      `Averaged ${formatSeconds(avgMs)} per mark against a ${formatSeconds(targetMs)} target` +
+        ` (${formatDuration(Math.abs(paceDeltaMs))} ${overUnder} pace overall).`,
+    )
+    if (unanswered > 0) {
+      parts.push(`Time ran out with ${unanswered} mark${unanswered === 1 ? '' : 's'} still to go.`)
+    }
+    if (slow.length > 0) {
+      const nums = slow.slice(0, 3).map((q) => `Q${q.number}`).join(', ')
+      parts.push(
+        `${slow.length} mark${slow.length === 1 ? '' : 's'} ran long${
+          nums ? ` (${nums}${slow.length > 3 ? '…' : ''})` : ''
+        } — candidates to flag and return to.`,
+      )
+    }
+  } else {
+    parts.push(
+      `Averaged ${formatSeconds(avgMs)} per mark across ${answered} mark${answered === 1 ? '' : 's'}.` +
+        ' No target was set — this is just your natural speed.',
     )
   }
 
